@@ -52,9 +52,21 @@ final class ChipAudioEngine {
         configureAudioGraph()
     }
 
-    deinit {
+    deinit { teardown() }
+
+    /// Stops the audio graph and destroys the C engine. Safe to call more than
+    /// once; after this the receiver renders silence.
+    func teardown() {
         av.stop()
-        if let engine { ct_engine_destroy(engine) }
+        if let node = sourceNode {
+            av.disconnectNodeOutput(node)
+            av.detach(node)
+            sourceNode = nil
+        }
+        if let engine {
+            ct_engine_destroy(engine)
+            self.engine = nil
+        }
     }
 
     private func configureAudioGraph() {

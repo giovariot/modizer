@@ -36,7 +36,6 @@ struct Oscilloscope: View {
             }
             context.stroke(path, with: .color(accent.opacity(0.9)), lineWidth: lineWidth)
         }
-        .drawingGroup()
     }
 }
 

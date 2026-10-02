@@ -2,9 +2,10 @@
 //  PreviewViewController.swift
 //  ModizerMiniQuickLook
 //
-//  Quick Look preview: press space on a supported file in Finder and this view
-//  appears, playing it immediately. Navigating to another file must stop the
-//  previous track, so the playbacks share a small process-wide registry.
+//  Quick Look preview: pressing space on a supported file in Finder shows this
+//  view and plays it. Quick Look reuses the controller when browsing files, so
+//  one hosting view and one audio engine are created once and simply reloaded;
+//  that avoids tearing the render/view hierarchy down on every file.
 //
 
 import Cocoa
@@ -13,7 +14,7 @@ import SwiftUI
 
 final class PreviewViewController: NSViewController, QLPreviewingController {
 
-    private var playback: QuickLookPlayback?
+    private let playback = QuickLookPlayback()
     private var hostingView: NSView?
 
     override func loadView() {
@@ -21,45 +22,31 @@ final class PreviewViewController: NSViewController, QLPreviewingController {
     }
 
     func preparePreviewOfFile(at url: URL) async throws {
-        // The system may reuse this controller: always stop what is playing.
-        playback?.stop()
-        hostingView?.removeFromSuperview()
-        hostingView = nil
-
-        let playback = QuickLookPlayback()
-        self.playback = playback
+        if hostingView == nil {
+            let host = NSHostingView(rootView: QuickLookPreviewView(playback: playback))
+            host.translatesAutoresizingMaskIntoConstraints = false
+            view.addSubview(host)
+            NSLayoutConstraint.activate([
+                host.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+                host.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+                host.topAnchor.constraint(equalTo: view.topAnchor),
+                host.bottomAnchor.constraint(equalTo: view.bottomAnchor),
+            ])
+            hostingView = host
+        }
         playback.load(url)
-
-        let host = NSHostingView(rootView: QuickLookPreviewView(playback: playback))
-        host.translatesAutoresizingMaskIntoConstraints = false
-        view.addSubview(host)
-        NSLayoutConstraint.activate([
-            host.leadingAnchor.constraint(equalTo: view.leadingAnchor),
-            host.trailingAnchor.constraint(equalTo: view.trailingAnchor),
-            host.topAnchor.constraint(equalTo: view.topAnchor),
-            host.bottomAnchor.constraint(equalTo: view.bottomAnchor),
-        ])
-        hostingView = host
     }
 
     override func viewWillDisappear() {
         super.viewWillDisappear()
-        playback?.stop()
-    }
-
-    override func viewDidDisappear() {
-        super.viewDidDisappear()
-        playback?.stop()
+        playback.stop()
     }
 }
 
-/// Small playback controller reused by the preview UI.
-@MainActor
+/// Playback controller shared by the preview UI. One audio engine is reused for
+/// every file; loading a new one unloads the previous track.
 @Observable
 final class QuickLookPlayback {
-    /// The playback that is currently producing sound, if any.
-    private static weak var active: QuickLookPlayback?
-
     private let audio = ChipAudioEngine()
     private var ticker: Timer?
 
@@ -72,11 +59,17 @@ final class QuickLookPlayback {
     private(set) var displayName = ""
 
     func load(_ url: URL) {
-        // Anything already playing belongs to the previous file: stop it.
-        QuickLookPlayback.active?.stop()
-        QuickLookPlayback.active = self
+        // Stop the current track before switching to the new file.
+        ticker?.invalidate()
+        ticker = nil
+        audio.unload()
 
         displayName = url.deletingPathExtension().lastPathComponent
+        failed = false
+        info = nil
+        voices = []
+        waveform = Array(repeating: 0, count: 320)
+
         guard let decoded = audio.load(url: url) else {
             failed = true
             return
@@ -94,7 +87,6 @@ final class QuickLookPlayback {
     }
 
     func stop() {
-        if QuickLookPlayback.active === self { QuickLookPlayback.active = nil }
         ticker?.invalidate()
         ticker = nil
         audio.unload()
@@ -132,6 +124,7 @@ private struct QuickLookPreviewView: View {
                         Text("\(info.format) · \(info.system)")
                             .font(.caption)
                             .foregroundStyle(.secondary)
+                            .lineLimit(1)
                     }
                 }
 

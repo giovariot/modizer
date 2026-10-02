@@ -168,6 +168,17 @@ static CtDecoder *createByProbing(const char *path, int subsong, CtTrackInfo *in
 // lifecycle
 // ---------------------------------------------------------------------------
 
+// The voice ring buffers are shared by the patched decoders. Allocate them
+// once per process: several engines can exist at the same time (e.g. when the
+// Quick Look extension switches file) and must not free each other's buffers.
+static bool g_voiceBuffersReady = false;
+static void ensureVoiceBuffers(void) {
+    if (g_voiceBuffersReady) return;
+    for (int i = 0; i < SOUND_MAXVOICES_BUFFER_FX; i++)
+        m_voice_buff[i] = (signed char *)calloc(CT_VOICE_RING, 1);
+    g_voiceBuffersReady = true;
+}
+
 CtEngine *ct_engine_create(double sampleRate) {
     if (sampleRate <= 0) sampleRate = CT_SAMPLE_RATE;
     CtEngine *e = (CtEngine *)calloc(1, sizeof(CtEngine));
@@ -176,8 +187,7 @@ CtEngine *ct_engine_create(double sampleRate) {
     e->volume = 1.0f;
     e->scratch = (short *)calloc((size_t)CT_MAX_FRAMES * 2, sizeof(short));
     e->wave = (float *)calloc(CT_WAVE_CAP, sizeof(float));
-    for (int i = 0; i < SOUND_MAXVOICES_BUFFER_FX; i++)
-        m_voice_buff[i] = (signed char *)calloc(CT_VOICE_RING, 1);
+    ensureVoiceBuffers();
     pthread_mutex_init(&e->lock, NULL);
     return e;
 }
@@ -208,7 +218,6 @@ void ct_engine_destroy(CtEngine *engine) {
     pthread_mutex_destroy(&e->lock);
     free(e->scratch);
     free(e->wave);
-    for (int i = 0; i < SOUND_MAXVOICES_BUFFER_FX; i++) free(m_voice_buff[i]);
     free(e);
 }
 
