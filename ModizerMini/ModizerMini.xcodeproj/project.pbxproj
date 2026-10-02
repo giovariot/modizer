@@ -294,6 +294,7 @@
 		AF94D6837B5801D8AD6A8A31 /* Gb_Apu.h in CopyFiles */ = {isa = PBXBuildFile; fileRef = FBC04DC98D6D7445058DD437 /* Gb_Apu.h */; };
 		AFED1B66E6A8E306EE68FC9F /* ModizerGlobals.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 9FEBFE9F5E3B88E801E8C18B /* ModizerGlobals.cpp */; };
 		B004C735EACE68839D6A0AE3 /* s3m.h in CopyFiles */ = {isa = PBXBuildFile; fileRef = F97A0A36EB84C2931A73CC60 /* s3m.h */; };
+		B02D24B374CF1898B805D959 /* VisualEffect.swift in Sources */ = {isa = PBXBuildFile; fileRef = AE56E7FD2D17D2A00B5873A6 /* VisualEffect.swift */; };
 		B15E0A110A3AFDC835514C6F /* hmn_extras.c in Sources */ = {isa = PBXBuildFile; fileRef = A54E23DEABF237F4D03E373D /* hmn_extras.c */; };
 		B1E64D2B218E209955CAD861 /* PlayerModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 00E79C843E981D2B76FA2EB0 /* PlayerModel.swift */; };
 		B24CB939E5FBDFC47DC7E4BF /* load_helpers.c in Sources */ = {isa = PBXBuildFile; fileRef = B238994D89538E6A254B403A /* load_helpers.c */; };
@@ -869,6 +870,7 @@
 		ACDE97B3EF5AD30725D6BF04 /* BackendTimidity.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = BackendTimidity.cpp; sourceTree = "<group>"; };
 		AD1A994760A2F62A06CF9DDA /* Dual_Resampler.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Dual_Resampler.h; sourceTree = "<group>"; };
 		AD439DBA7B91CF8E56D6C9DC /* Gb_Oscs.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Gb_Oscs.h; sourceTree = "<group>"; };
+		AE56E7FD2D17D2A00B5873A6 /* VisualEffect.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VisualEffect.swift; sourceTree = "<group>"; };
 		B06A4AFF232BB933B5D96A91 /* tuning.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = tuning.c; sourceTree = "<group>"; };
 		B0C35867468E30038380C5B9 /* Gb_Cpu.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Gb_Cpu.h; sourceTree = "<group>"; };
 		B14CC6C831393E69DDEA13A6 /* lzx.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = lzx.c; sourceTree = "<group>"; };
@@ -1056,6 +1058,7 @@
 				1DA62AD54807791D6EF8B64B /* PlayerView.swift */,
 				F0AC0F15030397460B7FC47B /* SettingsView.swift */,
 				37491934ABB2D826BB389ED4 /* SidebarView.swift */,
+				AE56E7FD2D17D2A00B5873A6 /* VisualEffect.swift */,
 			);
 			path = Views;
 			sourceTree = "<group>";
@@ -1809,6 +1812,7 @@
 				30FE6F63AC1FF37525095931 /* PlayerView.swift in Sources */,
 				1C58EBCA7E53C20F0AF6C307 /* SettingsView.swift in Sources */,
 				95AF96C86A728F67AAA45A3D /* SidebarView.swift in Sources */,
+				B02D24B374CF1898B805D959 /* VisualEffect.swift in Sources */,
 				D5316A3722EF278FAEFA4EB1 /* WaveformViews.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

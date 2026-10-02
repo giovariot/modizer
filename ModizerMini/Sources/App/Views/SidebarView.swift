@@ -28,7 +28,7 @@ struct SidebarView: View {
         }
         .listStyle(.sidebar)
         .scrollContentBackground(.hidden)
-        .background(.ultraThinMaterial)
+        .background(VisualEffectView(material: .sidebar, blending: .behindWindow).ignoresSafeArea())
         .overlay {
             if model.tracks.isEmpty {
                 ContentUnavailableView {

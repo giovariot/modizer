@@ -22,7 +22,7 @@ struct PlayerView: View {
             }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .background(.background)
+        .background(Color(nsColor: .windowBackgroundColor))
     }
 
     private var loadedContent: some View {

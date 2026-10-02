@@ -16,8 +16,8 @@ struct ContentView: View {
             PlayerView(model: model)
         }
         .frame(minWidth: 940, minHeight: 620)
-        // Let the sidebar show the desktop through, like a native sidebar.
-        .containerBackground(.ultraThinMaterial, for: .window)
+        // Let the sidebar vibrancy reach the desktop.
+        .background(WindowTransparencyConfigurator())
         .onOpenURL { model.open($0) }
         .alert("Impossibile riprodurre il file",
                isPresented: Binding(get: { model.errorMessage != nil },

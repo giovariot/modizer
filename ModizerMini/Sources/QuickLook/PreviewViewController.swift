@@ -3,7 +3,8 @@
 //  ModizerMiniQuickLook
 //
 //  Quick Look preview: press space on a supported file in Finder and this view
-//  appears, playing it immediately.
+//  appears, playing it immediately. Navigating to another file must stop the
+//  previous track, so the playbacks share a small process-wide registry.
 //
 
 import Cocoa
@@ -20,9 +21,14 @@ final class PreviewViewController: NSViewController, QLPreviewingController {
     }
 
     func preparePreviewOfFile(at url: URL) async throws {
+        // The system may reuse this controller: always stop what is playing.
+        playback?.stop()
+        hostingView?.removeFromSuperview()
+        hostingView = nil
+
         let playback = QuickLookPlayback()
-        playback.load(url)
         self.playback = playback
+        playback.load(url)
 
         let host = NSHostingView(rootView: QuickLookPreviewView(playback: playback))
         host.translatesAutoresizingMaskIntoConstraints = false
@@ -36,6 +42,11 @@ final class PreviewViewController: NSViewController, QLPreviewingController {
         hostingView = host
     }
 
+    override func viewWillDisappear() {
+        super.viewWillDisappear()
+        playback?.stop()
+    }
+
     override func viewDidDisappear() {
         super.viewDidDisappear()
         playback?.stop()
@@ -43,8 +54,12 @@ final class PreviewViewController: NSViewController, QLPreviewingController {
 }
 
 /// Small playback controller reused by the preview UI.
+@MainActor
 @Observable
 final class QuickLookPlayback {
+    /// The playback that is currently producing sound, if any.
+    private static weak var active: QuickLookPlayback?
+
     private let audio = ChipAudioEngine()
     private var ticker: Timer?
 
@@ -57,6 +72,10 @@ final class QuickLookPlayback {
     private(set) var displayName = ""
 
     func load(_ url: URL) {
+        // Anything already playing belongs to the previous file: stop it.
+        QuickLookPlayback.active?.stop()
+        QuickLookPlayback.active = self
+
         displayName = url.deletingPathExtension().lastPathComponent
         guard let decoded = audio.load(url: url) else {
             failed = true
@@ -75,9 +94,11 @@ final class QuickLookPlayback {
     }
 
     func stop() {
+        if QuickLookPlayback.active === self { QuickLookPlayback.active = nil }
         ticker?.invalidate()
         ticker = nil
         audio.unload()
+        isPaused = true
     }
 
     private func startTicker() {
@@ -101,7 +122,7 @@ private struct QuickLookPreviewView: View {
                 Image(systemName: "waveform.circle.fill")
                     .font(.system(size: 34))
                     .symbolRenderingMode(.hierarchical)
-                    .foregroundStyle(.tint)
+                    .foregroundStyle(ChipTheme.brand)
 
                 VStack(alignment: .leading, spacing: 2) {
                     Text(playback.displayName)
@@ -140,6 +161,7 @@ private struct QuickLookPreviewView: View {
         }
         .padding(20)
         .frame(minWidth: 420, minHeight: 260)
+        .tint(ChipTheme.brand)
     }
 }
 
