@@ -1,0 +1,298 @@
+# XcodeGen specification for ModizerMini.
+# Regenerate the project with:  cd ModizerMini && xcodegen generate
+#
+# Decoder libraries are built for native macOS into Vendor/lib by
+# Tools/build-decoders.sh (+ Tools/build-extras.sh) and linked from there.
+name: ModizerMini
+
+options:
+  bundleIdPrefix: com.yoyofr
+  createIntermediateGroups: true
+  deploymentTarget:
+    macOS: "27.0"
+  xcodeVersion: "27.0"
+  groupSortPosition: top
+
+settings:
+  base:
+    SWIFT_VERSION: "5.0"
+    SWIFT_STRICT_CONCURRENCY: minimal
+    MACOSX_DEPLOYMENT_TARGET: "27.0"
+    MARKETING_VERSION: "1.0"
+    CURRENT_PROJECT_VERSION: "1"
+    DEVELOPMENT_TEAM: ""
+    CODE_SIGN_STYLE: Manual
+    CODE_SIGN_IDENTITY: "-"
+    ENABLE_HARDENED_RUNTIME: NO
+    CLANG_ENABLE_OBJC_ARC: YES
+    ALWAYS_SEARCH_USER_PATHS: NO
+    DEAD_CODE_STRIPPING: YES
+
+targets:
+
+  # ---------------------------------------------------------------------------
+  # The decoders' C glue, built once and shared by the app and the Quick Look
+  # extension. The 44 decoder libraries themselves come from Vendor/lib.
+  # ---------------------------------------------------------------------------
+  ChiptuneKit:
+    type: library.static
+    platform: macOS
+    sources:
+      - path: Sources/ChiptuneKit
+        excludes:
+          - "BackendUade.cpp"
+      - path: Sources/ChiptuneKit/BackendUade.cpp
+        compilerFlags: "-I$(SRCROOT)/../libs/uade-2.13/src/include -I$(SRCROOT)/../libs/uade-2.13/src/frontends/common"
+      - path: ../libs/libxmp/libxmp-master/src
+        excludes:
+          - "lite"
+          - "lite/**"
+          - "bitrot"
+          - "bitrot/**"
+          - "**/*.in"
+          - "**/*.txt"
+          - "lutgen.c"
+          - "depackers/ice_unpack_fn.c"
+          - "depackers/lhasa/bit_stream_reader.c"
+          - "depackers/lhasa/lh_new_decoder.c"
+          - "depackers/lhasa/pma_common.c"
+          - "depackers/lhasa/tree_decode.c"
+          - "loaders/prowizard/pm.c"
+          - "loaders/prowizard/pm01.c"
+          - "loaders/prowizard/pm20.c"
+          - "loaders/prowizard/pm40.c"
+          - "loaders/prowizard/pp30.c"
+          - "loaders/prowizard/ptk.c"
+      - path: ../libs/libGME/gme
+        excludes:
+          - "CMakeLists.txt"
+          - "gme_types.h.in"
+          - "gme.exports"
+          - "libgme.pc.in"
+          - "Ym2612_MAME.cpp"
+          - "Ym2612_MAME.h"
+          - "Ym2612_Nuked.cpp"
+          - "Ym2612_Nuked.h"
+          - "ext/LICENSE"
+          - "ext/README.md"
+          - "ext/*.txt"
+        compilerFlags: -DVGM_YM2612_GENS
+    settings:
+      base:
+        HEADER_SEARCH_PATHS:
+          - $(SRCROOT)/../src
+          - $(SRCROOT)/../libs/libxmp/libxmp-master/include
+          - $(SRCROOT)/../libs/libGME/gme
+          - $(SRCROOT)/../libs/libopenmpt/openmpt-trunk/libopenmpt
+          - $(SRCROOT)/../libs/libvgmstream/vgmstream-master/src
+          - $(SRCROOT)/../libs/libsidplayfp/src/libsidplayfp/src
+          - $(SRCROOT)/../libs/libsidplayfp/src
+          - $(SRCROOT)/../libs/asap
+          - $(SRCROOT)/../libs/AHX
+          - $(SRCROOT)/../libs/STSound/StSoundLibrary
+          - $(SRCROOT)/../libs/v2mplayer/v2mplayer/src
+          - $(SRCROOT)/../libs/Adplug/adplug-master/src
+          - $(SRCROOT)/../libs/binio/libbinio-master/src
+          - $(SRCROOT)/../libs/libatariaudio/AtariAudio
+          - $(SRCROOT)/../libs/libkss/libkss/src
+          - $(SRCROOT)/../libs/libkss/libkss/modules
+          - $(SRCROOT)/../libs/libnez/webnez/src
+          - $(SRCROOT)/../libs/libnez/webnez/src/format
+          - $(SRCROOT)/../libs/libpt3
+          - $(SRCROOT)/../libs/libnsfplay/nsfplay-master
+          - $(SRCROOT)/../libs/libnsfplay/nsfplay-master/xgm/player/nsf
+          - $(SRCROOT)/../libs/libpixel/libpixel/src/pxtone
+          - $(SRCROOT)/../libs/libwonderswan
+          - $(SRCROOT)/../libs/libwonderswan/libwonderswan
+          - $(SRCROOT)/../libs/libfmpmini/libfmpmini
+          - $(SRCROOT)/../libs/libpmdmini/libpmdmini/src
+          - $(SRCROOT)/../libs/mdxplay
+          - $(SRCROOT)/../libs/libeupmini/libeupmini/eupmini
+          - $(SRCROOT)/../libs/libfurnace/furnace/src/modizer
+          - $(SRCROOT)/../libs/libvgm/libvgm
+          - $(SRCROOT)/../libs/libzxtune/libzxtune/emscripten
+          - $(SRCROOT)/../libs/monkeyaudiocodec/mac-master/src/MACLib
+          - $(SRCROOT)/../libs/monkeyaudiocodec/mac-master/src/shared
+          - $(SRCROOT)/../libs/libpsflib/psflib
+          - $(SRCROOT)/../libs/highlyexperimental
+          - $(SRCROOT)/../libs/highlyexperimental/highlyexperimental/Core
+          - $(SRCROOT)/../libs/highlytheoritical
+          - $(SRCROOT)/../libs/highlytheoritical/highlytheoritical
+          - $(SRCROOT)/../libs/HighlyQuixotic/HighlyQuixotic
+          - $(SRCROOT)/../libs/libLazyusf/libLazyusf
+          - $(SRCROOT)/../libs/libLazyusf/libLazyusf/usf
+          - $(SRCROOT)/../libs/libxsf/src
+          - $(SRCROOT)/../libs/libxsf/src/in_xsf_framework
+          - $(SRCROOT)/../libs/libxsf/src/in_2sf
+          - $(SRCROOT)/../libs/libxsf/src/in_ncsf
+          - $(SRCROOT)/../libs/snsf/snsf9x
+          - $(SRCROOT)/../libs/libgsf
+          - $(SRCROOT)/../libs/libgsf/VBA
+          - $(SRCROOT)/../libs/vio2sf/vio2sf/emscripten
+          - $(SRCROOT)/../libs/libtim
+          - $(SRCROOT)/../libs/libtim/timidity
+          - $(SRCROOT)/../libs/libtim/utils
+          - $(SRCROOT)/../libs/libtim/interface
+          - $(SRCROOT)/../libs/libtim/libarc
+          - $(SRCROOT)/../libs/sc68/libsc68
+          - $(SRCROOT)/../libs/sc68/file68
+          - $(SRCROOT)/../libs/websid
+        GCC_PREPROCESSOR_DEFINITIONS:
+          - LIBXMP_STATIC=1
+          - HAVE_DIRENT=1
+          - HAVE_DUP2=1
+          - HAVE_EXECVP=1
+          - HAVE_FNMATCH=1
+          - HAVE_FORK=1
+          - HAVE_MKSTEMP=1
+          - HAVE_PIPE=1
+          - HAVE_POPEN=1
+          - HAVE_POWF=1
+          - HAVE_UMASK=1
+          - HAVE_WAIT=1
+          - _REENTRANT=1
+        GCC_C_LANGUAGE_STANDARD: gnu11
+        CLANG_CXX_LANGUAGE_STANDARD: "c++14"
+        CLANG_CXX_LIBRARY: libc++
+        CLANG_WARN_DOCUMENTATION_COMMENTS: NO
+        GCC_WARN_64_TO_32_BIT_CONVERSION: NO
+        CLANG_WARN_STRICT_PROTOTYPES: NO
+        GCC_WARN_UNUSED_FUNCTION: NO
+        GCC_WARN_UNUSED_VARIABLE: NO
+        CLANG_WARN_UNGUARDED_AVAILABILITY: NO
+    dependencies:
+      - sdk: libz.tbd
+    preBuildScripts:
+      - name: Build decoder libraries
+        basedOnDependencyAnalysis: false
+        script: |
+          "${SRCROOT}/Tools/build-decoders.sh"
+          "${SRCROOT}/Tools/build-extras.sh"
+
+  # ---------------------------------------------------------------------------
+  # The app.
+  # ---------------------------------------------------------------------------
+  ModizerMini:
+    type: application
+    platform: macOS
+    sources:
+      - path: Sources/App
+        excludes:
+          - "Support/**"
+      - path: Sources/Shared
+      - path: ../Resources/UADE
+        type: folder
+    settings:
+      base:
+        PRODUCT_NAME: ModizerMini
+        PRODUCT_BUNDLE_IDENTIFIER: com.yoyofr.ModizerMini
+        INFOPLIST_FILE: Support/App-Info.plist
+        CODE_SIGN_ENTITLEMENTS: Support/App.entitlements
+        SWIFT_OBJC_BRIDGING_HEADER: Sources/App/Support/ModizerMini-Bridging-Header.h
+        HEADER_SEARCH_PATHS:
+          - $(SRCROOT)/Sources/ChiptuneKit
+          - $(SRCROOT)/../src
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+        OTHER_LDFLAGS: &decoderLibs
+          - $(BUILT_PRODUCTS_DIR)/libChiptuneKit.a
+          - -lc++
+          - -lz
+          - -lbz2
+          - -liconv
+          - $(SRCROOT)/Vendor/lib/adplug.a
+          - $(SRCROOT)/Vendor/lib/atrac9.a
+          - $(SRCROOT)/Vendor/lib/binio.a
+          - $(SRCROOT)/Vendor/lib/asap.a
+          - $(SRCROOT)/Vendor/lib/atariaudio.a
+          - $(SRCROOT)/Vendor/lib/chpconv.a
+          - $(SRCROOT)/Vendor/lib/eupmini.a
+          - $(SRCROOT)/Vendor/lib/fmpmini.a
+          - $(SRCROOT)/Vendor/lib/freeverb.a
+          - $(SRCROOT)/Vendor/lib/furnace.a
+          - $(SRCROOT)/Vendor/lib/g719.a
+          - $(SRCROOT)/Vendor/lib/gbsplay.a
+          - $(SRCROOT)/Vendor/lib/gsf.a
+          - $(SRCROOT)/Vendor/lib/HighlyQuixotic.a
+          - $(SRCROOT)/Vendor/lib/highlyexperimental.a
+          - $(SRCROOT)/Vendor/lib/highlytheoritical.a
+          - $(SRCROOT)/Vendor/lib/hvl.a
+          - $(SRCROOT)/Vendor/lib/kss.a
+          - $(SRCROOT)/Vendor/lib/lazyusf.a
+          - $(SRCROOT)/Vendor/lib/mdxplay.a
+          - $(SRCROOT)/Vendor/lib/monkeyaudio.a
+          - $(SRCROOT)/Vendor/lib/mpg123.a
+          - $(SRCROOT)/Vendor/lib/nez.a
+          - $(SRCROOT)/Vendor/lib/nsfplay.a
+          - $(SRCROOT)/Vendor/lib/ogg.a
+          - $(SRCROOT)/Vendor/lib/openmpt.a
+          - $(SRCROOT)/Vendor/lib/pixel.a
+          - $(SRCROOT)/Vendor/lib/pmdmini.a
+          - $(SRCROOT)/Vendor/lib/psflib.a
+          - $(SRCROOT)/Vendor/lib/pt3.a
+          - $(SRCROOT)/Vendor/lib/residfp.a
+          - $(SRCROOT)/Vendor/lib/sc68.a
+          - $(SRCROOT)/Vendor/lib/sidplayfp.a
+          - $(SRCROOT)/Vendor/lib/snsf.a
+          - $(SRCROOT)/Vendor/lib/stsound.a
+          - $(SRCROOT)/Vendor/lib/tim.a
+          - $(SRCROOT)/Vendor/lib/uade.a
+          - $(SRCROOT)/Vendor/lib/v2mplayer.a
+          - $(SRCROOT)/Vendor/lib/vgm.a
+          - $(SRCROOT)/Vendor/lib/vgmstream.a
+          - $(SRCROOT)/Vendor/lib/vio2sf.a
+          - $(SRCROOT)/Vendor/lib/vorbis.a
+          - $(SRCROOT)/Vendor/lib/websid.a
+          - $(SRCROOT)/Vendor/lib/wonderswan.a
+          - $(SRCROOT)/Vendor/lib/xsf.a
+          - $(SRCROOT)/Vendor/lib/zxtune.a
+        LD_RUNPATH_SEARCH_PATHS: "$(inherited) @executable_path/../Frameworks"
+        ENABLE_APP_SANDBOX: YES
+        ENABLE_USER_SELECTED_FILES: readwrite
+    dependencies:
+      - target: ChiptuneKit
+      - target: ModizerMiniQuickLook
+        embed: true
+      - sdk: AVFoundation.framework
+      - sdk: AudioToolbox.framework
+      - sdk: AppKit.framework
+      - sdk: UniformTypeIdentifiers.framework
+      - sdk: QuickLookUI.framework
+      - sdk: Quartz.framework
+      - sdk: CoreAudio.framework
+
+  # ---------------------------------------------------------------------------
+  # Quick Look preview extension.
+  # ---------------------------------------------------------------------------
+  ModizerMiniQuickLook:
+    type: app-extension
+    platform: macOS
+    sources:
+      - path: Sources/QuickLook
+        excludes:
+          - "Support/**"
+      - path: Sources/Shared
+      - path: ../Resources/UADE
+        type: folder
+    settings:
+      base:
+        PRODUCT_NAME: ModizerMiniQuickLook
+        PRODUCT_BUNDLE_IDENTIFIER: com.yoyofr.ModizerMini.QuickLook
+        INFOPLIST_FILE: Support/QuickLook-Info.plist
+        CODE_SIGN_ENTITLEMENTS: Support/QuickLook.entitlements
+        SWIFT_OBJC_BRIDGING_HEADER: Sources/QuickLook/Support/QuickLook-Bridging-Header.h
+        HEADER_SEARCH_PATHS:
+          - $(SRCROOT)/Sources/ChiptuneKit
+          - $(SRCROOT)/../src
+        OTHER_LDFLAGS: *decoderLibs
+        LD_RUNPATH_SEARCH_PATHS: "$(inherited) @executable_path/../../../../Frameworks"
+        SKIP_INSTALL: YES
+        ENABLE_APP_SANDBOX: YES
+        ENABLE_USER_SELECTED_FILES: readonly
+    dependencies:
+      - target: ChiptuneKit
+      - sdk: AVFoundation.framework
+      - sdk: AudioToolbox.framework
+      - sdk: AppKit.framework
+      - sdk: UniformTypeIdentifiers.framework
+      - sdk: QuickLookUI.framework
+      - sdk: Quartz.framework
