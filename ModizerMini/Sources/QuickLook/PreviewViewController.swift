@@ -12,13 +12,29 @@ import Cocoa
 import Quartz
 import SwiftUI
 
+/// Root view that tells its owner when it is attached to / detached from a window.
+final class PreviewRootView: NSView {
+    var onWindowChange: ((NSWindow?) -> Void)?
+    override func viewDidMoveToWindow() {
+        super.viewDidMoveToWindow()
+        onWindowChange?(window)
+    }
+}
+
 final class PreviewViewController: NSViewController, QLPreviewingController {
 
     private let playback = QuickLookPlayback()
     private var hostingView: NSView?
+    private var watchdog: Timer?
 
     override func loadView() {
-        view = NSView(frame: NSRect(x: 0, y: 0, width: 560, height: 340))
+        let root = PreviewRootView(frame: NSRect(x: 0, y: 0, width: 560, height: 340))
+        root.onWindowChange = { [weak self] window in
+            // Detached from the window: Quick Look moved on (possibly to a file
+            // handled by another preview), so stop playing right away.
+            if window == nil { self?.stopEverything() }
+        }
+        view = root
     }
 
     func preparePreviewOfFile(at url: URL) async throws {
@@ -37,9 +53,40 @@ final class PreviewViewController: NSViewController, QLPreviewingController {
         playback.load(url)
     }
 
+    override func viewDidAppear() {
+        super.viewDidAppear()
+        startWatchdog()
+    }
+
     override func viewWillDisappear() {
         super.viewWillDisappear()
+        stopEverything()
+    }
+
+    override func viewDidDisappear() {
+        super.viewDidDisappear()
+        stopEverything()
+    }
+
+    deinit {
+        watchdog?.invalidate()
+    }
+
+    private func stopEverything() {
         playback.stop()
+        watchdog?.invalidate()
+        watchdog = nil
+    }
+
+    /// Quick Look does not always tell the controller when another preview takes
+    /// over (e.g. moving to an MP3), so poll whether we are still on screen.
+    private func startWatchdog() {
+        guard watchdog == nil else { return }
+        watchdog = Timer.scheduledTimer(withTimeInterval: 0.25, repeats: true) { [weak self] _ in
+            guard let self else { return }
+            let onScreen = self.view.window != nil && !self.view.isHidden && self.view.superview != nil
+            if !onScreen { self.stopEverything() }
+        }
     }
 }
 
