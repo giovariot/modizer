@@ -99,15 +99,10 @@ final class PreviewViewController: NSViewController, QLPreviewingController {
     /// True when our view is attached to a visible window and actually on top
     /// (hit-testing catches the case where another preview covers it).
     private func isPreviewVisible() -> Bool {
-        guard let window = view.window, window.isVisible, !view.isHidden, view.superview != nil else {
-            return false
-        }
-        // Another preview/window covering the panel also means we moved on.
-        guard window.occlusionState.contains(.visible) else { return false }
-        guard let content = window.contentView else { return false }
-        let point = view.convert(NSPoint(x: view.bounds.midX, y: view.bounds.midY), to: nil)
-        guard let hit = content.hitTest(point) else { return false }
-        return hit === view || hit.isDescendant(of: view) || view.isDescendant(of: hit)
+        // Only rely on unambiguous signals: our view must be attached to a
+        // visible window and still in the hierarchy.
+        guard let window = view.window else { return false }
+        return window.isVisible && !view.isHidden && view.superview != nil
     }
 }
 

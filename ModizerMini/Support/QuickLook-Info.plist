@@ -44,6 +44,13 @@
 				<string>com.yoyofr.modizer.fur</string>
 				<string>com.yoyofr.modizer.hvl</string>
 				<string>com.yoyofr.modizer.zxtune</string>
+				<!-- Formats the system previews itself: handle them here too so
+				     the switch between files stays inside our extension and the
+				     previous track is stopped. -->
+				<string>public.mp3</string>
+				<string>com.microsoft.waveform-audio</string>
+				<string>public.aiff-audio</string>
+				<string>org.xiph.ogg</string>
 			</array>
 			<key>QLSupportsSearchableItems</key>
 			<false/>
