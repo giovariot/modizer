@@ -12,6 +12,14 @@ import Cocoa
 import Quartz
 import SwiftUI
 
+/// Temporary diagnostics: writes to a file in the extension's temp directory.
+enum QLLog {
+    static let url = URL(fileURLWithPath: NSTemporaryDirectory()).appendingPathComponent("mdz-ql.log")
+    static func log(_ message: String) {
+        NSLog("[ModizerMiniQuickLook] %{public}@", message)
+    }
+}
+
 /// Root view that tells its owner when it is attached to / detached from a window.
 final class PreviewRootView: NSView {
     var onWindowChange: ((NSWindow?) -> Void)?
@@ -30,6 +38,7 @@ final class PreviewViewController: NSViewController, QLPreviewingController {
     override func loadView() {
         let root = PreviewRootView(frame: NSRect(x: 0, y: 0, width: 560, height: 340))
         root.onWindowChange = { [weak self] window in
+            QLLog.log("viewDidMoveToWindow window=\(window == nil ? "nil" : "set") visible=\(window?.isVisible ?? false)")
             // Detached from the window: Quick Look moved on (possibly to a file
             // handled by another preview), so stop playing right away.
             if window == nil { self?.stopEverything() }
@@ -38,6 +47,7 @@ final class PreviewViewController: NSViewController, QLPreviewingController {
     }
 
     func preparePreviewOfFile(at url: URL) async throws {
+        QLLog.log("prepare \(url.lastPathComponent)")
         if hostingView == nil {
             let host = NSHostingView(rootView: QuickLookPreviewView(playback: playback))
             host.translatesAutoresizingMaskIntoConstraints = false
@@ -55,16 +65,19 @@ final class PreviewViewController: NSViewController, QLPreviewingController {
 
     override func viewDidAppear() {
         super.viewDidAppear()
+        QLLog.log("viewDidAppear")
         startWatchdog()
     }
 
     override func viewWillDisappear() {
         super.viewWillDisappear()
+        QLLog.log("viewWillDisappear")
         stopEverything()
     }
 
     override func viewDidDisappear() {
         super.viewDidDisappear()
+        QLLog.log("viewDidDisappear")
         stopEverything()
     }
 
@@ -73,6 +86,7 @@ final class PreviewViewController: NSViewController, QLPreviewingController {
     }
 
     private func stopEverything() {
+        QLLog.log("stopEverything")
         playback.stop()
         watchdog?.invalidate()
         watchdog = nil
@@ -85,9 +99,15 @@ final class PreviewViewController: NSViewController, QLPreviewingController {
     private func startWatchdog() {
         guard watchdog == nil else { return }
         var missed = 0
+        var lastVisible = true
         watchdog = Timer.scheduledTimer(withTimeInterval: 0.25, repeats: true) { [weak self] _ in
             guard let self else { return }
-            if self.isPreviewVisible() {
+            let visible = self.isPreviewVisible()
+            if visible != lastVisible {
+                lastVisible = visible
+                QLLog.log("visible=\(visible) window=\(self.view.window != nil) superview=\(self.view.superview != nil) hidden=\(self.view.isHidden)")
+            }
+            if visible {
                 missed = 0
             } else {
                 missed += 1
@@ -99,10 +119,15 @@ final class PreviewViewController: NSViewController, QLPreviewingController {
     /// True when our view is attached to a visible window and actually on top
     /// (hit-testing catches the case where another preview covers it).
     private func isPreviewVisible() -> Bool {
-        // Only rely on unambiguous signals: our view must be attached to a
-        // visible window and still in the hierarchy.
-        guard let window = view.window else { return false }
-        return window.isVisible && !view.isHidden && view.superview != nil
+        guard let window = view.window, window.isVisible, !view.isHidden, view.superview != nil else {
+            return false
+        }
+        // If the centre of our view no longer receives the click, Quick Look is
+        // showing another preview on top of us: we are not the active one.
+        guard let content = window.contentView else { return true }
+        let point = view.convert(NSPoint(x: view.bounds.midX, y: view.bounds.midY), to: nil)
+        guard let hit = content.hitTest(point) else { return false }
+        return hit === view || hit.isDescendant(of: view) || view.isDescendant(of: hit)
     }
 }
 
