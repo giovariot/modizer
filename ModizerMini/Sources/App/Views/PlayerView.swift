@@ -36,7 +36,9 @@ struct PlayerView: View {
                 .padding(.horizontal, 24)
                 .padding(.vertical, 16)
 
-            VoiceListView(voices: model.voices, isConsole: model.info?.isConsole ?? false)
+            VoiceListView(voices: model.voices,
+                          isConsole: model.info?.isConsole ?? false,
+                          namesAreText: model.info?.instrumentNamesAreText ?? false)
                 .frame(maxHeight: .infinity)
 
             TransportBar(model: model)
@@ -88,6 +90,16 @@ private struct TrackInfoHeader: View {
                     if info.title != track?.displayName, !info.title.isEmpty {
                         StatChip(symbol: "textformat", text: info.title)
                     }
+                }
+
+                // Credits many modules store split across the instrument names.
+                if !info.instrumentText.isEmpty {
+                    Text(info.instrumentText)
+                        .font(.callout)
+                        .foregroundStyle(.secondary)
+                        .lineLimit(3)
+                        .textSelection(.enabled)
+                        .fixedSize(horizontal: false, vertical: true)
                 }
             }
         }
@@ -193,11 +205,12 @@ private struct DetailRow: View {
 private struct VoiceListView: View {
     let voices: [VoiceSnapshot]
     let isConsole: Bool
+    let namesAreText: Bool
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
             HStack {
-                Label(isConsole ? "Voci del chip" : "Strumenti", systemImage: "list.bullet.indent")
+                Label(isConsole ? "Voci del chip" : "Canali", systemImage: "list.bullet.indent")
                     .font(.headline)
                 Spacer()
                 Text("\(voices.filter(\.active).count)/\(voices.count) attivi")
@@ -210,7 +223,7 @@ private struct VoiceListView: View {
             ScrollView {
                 LazyVStack(spacing: 2) {
                     ForEach(voices) { voice in
-                        VoiceRow(voice: voice)
+                        VoiceRow(voice: voice, namesAreText: namesAreText)
                     }
                 }
                 .padding(.horizontal, 24)
@@ -224,10 +237,16 @@ private struct VoiceListView: View {
 private struct VoiceRow: View {
     @Environment(AppSettings.self) private var settings
     let voice: VoiceSnapshot
+    let namesAreText: Bool
 
+    /// What to show as the instrument of this voice.
     private var instrumentTitle: String {
-        if !voice.instrument.isEmpty { return voice.instrument }
-        if voice.instrumentIndex > 0 { return "Strumento \(voice.instrumentIndex + 1)" }
+        if !voice.sample.isEmpty { return voice.sample }
+        if !voice.instrument.isEmpty && !namesAreText { return voice.instrument }
+        if !voice.name.isEmpty && !voice.name.hasPrefix("Channel") && !voice.name.hasPrefix("Voice") {
+            return voice.name
+        }
+        if voice.instrumentIndex >= 0 { return "Strumento \(voice.instrumentIndex + 1)" }
         return "—"
     }
 

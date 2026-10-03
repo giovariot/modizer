@@ -102,6 +102,8 @@ final class PreviewViewController: NSViewController, QLPreviewingController {
         guard let window = view.window, window.isVisible, !view.isHidden, view.superview != nil else {
             return false
         }
+        // Another preview/window covering the panel also means we moved on.
+        guard window.occlusionState.contains(.visible) else { return false }
         guard let content = window.contentView else { return false }
         let point = view.convert(NSPoint(x: view.bounds.midX, y: view.bounds.midY), to: nil)
         guard let hit = content.hitTest(point) else { return false }

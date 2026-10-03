@@ -24,6 +24,21 @@ struct DecodedTrackInfo: Equatable {
     var isConsole: Bool
     var comment: String = ""
     var instrumentNames: [String] = []
+
+    /// True when the instrument names read as a sentence (authors often split a
+    /// dedication/credits across them) rather than as instrument labels.
+    var instrumentNamesAreText: Bool {
+        let names = instrumentNames.filter { !$0.isEmpty }
+        guard names.count >= 2 else { return false }
+        let joined = names.joined(separator: " ")
+        guard joined.count >= 12, joined.contains(" ") else { return false }
+        return joined.split(separator: " ").contains { $0.count >= 5 }
+    }
+
+    /// The text reconstructed by joining the instrument names in order.
+    var instrumentText: String {
+        instrumentNamesAreText ? instrumentNames.filter { !$0.isEmpty }.joined(separator: " ") : ""
+    }
 }
 
 /// One row of the instrument list.
