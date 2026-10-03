@@ -112,6 +112,12 @@ int ct_voice_waveform(const CtEngine *engine, int voice, float *out, int frames)
 /// Name of the sample currently playing on a voice (empty when unknown).
 const char *ct_voice_sample(const CtEngine *engine, int voice);
 
+/// Number of instruments/samples the module defines.
+int ct_instrument_count(const CtEngine *engine);
+
+/// Name of the module's instrument @p index (0-based), empty when unnamed.
+const char *ct_instrument_name(const CtEngine *engine, int index);
+
 /// Module comment / message text (TEXT, STIL, IT message, game/music credits).
 const char *ct_module_comment(const CtEngine *engine);
 

@@ -20,6 +20,14 @@ struct OpenmptBackend : CtDecoder {
 
     ~OpenmptBackend() override { if (mod) openmpt_module_destroy(mod); }
     const char *comment() override { return commentBuf; }
+    int instrumentCount() override { return mod ? openmpt_module_get_num_instruments(mod) : 0; }
+    const char *instrumentName(int index) override {
+        if (!mod) return "";
+        const char *n = openmpt_module_get_instrument_name(mod, (int32_t)index);
+        snprintf(nameBuf, sizeof(nameBuf), "%s", (n && n[0]) ? n : "");
+        if (n) openmpt_free_string(n);
+        return nameBuf;
+    }
 
     void render(int16_t *dst, int frames) override {
         if (mod) openmpt_module_read_interleaved_stereo(mod, CT_SAMPLE_RATE, (size_t)frames, dst);

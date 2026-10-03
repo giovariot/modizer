@@ -66,6 +66,17 @@ struct XmpBackend : CtDecoder {
         xmp_get_module_info(ctx, &mi);
         return mi.comment ? mi.comment : "";
     }
+    int instrumentCount() override {
+        struct xmp_module_info mi;
+        xmp_get_module_info(ctx, &mi);
+        return mi.mod ? mi.mod->ins : 0;
+    }
+    const char *instrumentName(int index) override {
+        struct xmp_module_info mi;
+        xmp_get_module_info(ctx, &mi);
+        if (!mi.mod || index < 0 || index >= mi.mod->ins) return "";
+        return mi.mod->xxi[index].name;
+    }
     void voiceState(int v, int *note, float *level, bool *active) override {
         const struct xmp_channel_info *ci = &fi.channel_info[v];
         if (note) *note = (ci->note >= 0x80) ? 0 : ci->note;

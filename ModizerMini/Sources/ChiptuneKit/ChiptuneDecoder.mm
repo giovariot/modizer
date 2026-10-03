@@ -432,6 +432,18 @@ const char *ct_voice_sample(const CtEngine *engine, int voice) {
     return e->backend->voiceSample(voice);
 }
 
+int ct_instrument_count(const CtEngine *engine) {
+    const CtEngine *e = (const CtEngine *)engine;
+    if (!e || !e->backend) return 0;
+    return e->backend->instrumentCount();
+}
+
+const char *ct_instrument_name(const CtEngine *engine, int index) {
+    const CtEngine *e = (const CtEngine *)engine;
+    if (!e || !e->backend) return "";
+    return e->backend->instrumentName(index);
+}
+
 const char *ct_module_comment(const CtEngine *engine) {
     const CtEngine *e = (const CtEngine *)engine;
     if (!e || !e->backend) return "";

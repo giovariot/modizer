@@ -115,6 +115,14 @@ private struct ModuleInfoButton: View {
     let info: DecodedTrackInfo
     @State private var showing = false
 
+    /// Some modules store a whole text (credits, greetings) split across the
+    /// instrument names; joining the non-empty ones in order rebuilds it.
+    private var instrumentText: String {
+        let names = info.instrumentNames.filter { !$0.isEmpty }
+        guard names.count >= 2 else { return "" }
+        return names.joined(separator: " ")
+    }
+
     var body: some View {
         Button {
             showing.toggle()
@@ -139,11 +147,26 @@ private struct ModuleInfoButton: View {
                         if info.subsongs > 1 { DetailRow("Subsong", "\(info.currentSubsong + 1)/\(info.subsongs)") }
                         if info.duration > 0 { DetailRow("Durata", Formatting.time(info.duration)) }
                     }
-                    Divider()
-                    Text(info.comment)
-                        .font(.callout)
-                        .textSelection(.enabled)
-                        .frame(maxWidth: .infinity, alignment: .leading)
+                    if !info.comment.isEmpty {
+                        Divider()
+                        Text("Info")
+                            .font(.subheadline.weight(.semibold))
+                            .foregroundStyle(.secondary)
+                        Text(info.comment)
+                            .font(.callout)
+                            .textSelection(.enabled)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                    }
+                    if !instrumentText.isEmpty {
+                        Divider()
+                        Text("Testo dagli strumenti")
+                            .font(.subheadline.weight(.semibold))
+                            .foregroundStyle(.secondary)
+                        Text(instrumentText)
+                            .font(.callout)
+                            .textSelection(.enabled)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                    }
                 }
                 .padding(14)
             }
@@ -202,6 +225,12 @@ private struct VoiceRow: View {
     @Environment(AppSettings.self) private var settings
     let voice: VoiceSnapshot
 
+    private var instrumentTitle: String {
+        if !voice.instrument.isEmpty { return voice.instrument }
+        if voice.instrumentIndex > 0 { return "Strumento \(voice.instrumentIndex + 1)" }
+        return "—"
+    }
+
     var body: some View {
         HStack(spacing: 12) {
             Text(voice.name)
@@ -211,7 +240,7 @@ private struct VoiceRow: View {
 
             VStack(alignment: .leading, spacing: 3) {
                 HStack(spacing: 8) {
-                    Text(voice.instrument.isEmpty ? "—" : voice.instrument)
+                    Text(instrumentTitle)
                         .font(.callout)
                         .lineLimit(1)
                     Spacer(minLength: 0)

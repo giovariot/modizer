@@ -23,6 +23,7 @@ struct DecodedTrackInfo: Equatable {
     var duration: TimeInterval
     var isConsole: Bool
     var comment: String = ""
+    var instrumentNames: [String] = []
 }
 
 /// One row of the instrument list.
@@ -30,6 +31,7 @@ struct VoiceSnapshot: Identifiable, Equatable {
     let id: Int
     let name: String
     let instrument: String
+    let instrumentIndex: Int
     let sample: String
     let note: Int
     let level: Float
@@ -106,6 +108,7 @@ final class ChipAudioEngine {
         guard ok else { return nil }
         var decoded = DecodedTrackInfo(cStruct: info)
         decoded.comment = String(cString: ct_module_comment(engine))
+        decoded.instrumentNames = Self.instrumentNames(engine: engine)
         return decoded
     }
 
@@ -156,6 +159,20 @@ final class ChipAudioEngine {
         }
     }
 
+    /// Names of every instrument the module defines, in order.
+    private static func instrumentNames(engine: OpaquePointer) -> [String] {
+        let count = Int(ct_instrument_count(engine))
+        guard count > 0 else { return [] }
+        var names: [String] = []
+        names.reserveCapacity(count)
+        for index in 0..<count {
+            let name = String(cString: ct_instrument_name(engine, Int32(index)))
+                .trimmingCharacters(in: .whitespacesAndNewlines)
+            names.append(name)
+        }
+        return names
+    }
+
     func voiceSnapshots(waveformPoints: Int = 64) -> [VoiceSnapshot] {
         guard let engine else { return [] }
         let count = Int(ct_voice_count(engine))
@@ -184,6 +201,7 @@ final class ChipAudioEngine {
             result.append(VoiceSnapshot(id: index,
                                         name: name,
                                         instrument: instrumentName,
+                                        instrumentIndex: Int(instrument),
                                         sample: sampleName,
                                         note: Int(note),
                                         level: level,

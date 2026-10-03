@@ -115,6 +115,18 @@ struct TimidityBackend : CtDecoder {
     void seekMs(int ms) override { tim_pending_seek = (int)ms; ended_ = false; }
     bool ended() override { return ended_ && timRead == timWrite; }
     int voiceCount() override { return 64; }
+    const char *voiceName(int v) override {
+        static char buf[16];
+        if (v >= 16) return "";
+        snprintf(buf, sizeof(buf), "Ch %d", v + 1);
+        return buf;
+    }
+    const char *voiceInstrument(int v) override {
+        // General MIDI instrument name for the channel's current program.
+        if (v < 0 || v >= 16) return "";
+        char *n = channel_instrum_name(v);
+        return (n && n[0]) ? n : "";
+    }
 };
 
 } // namespace
