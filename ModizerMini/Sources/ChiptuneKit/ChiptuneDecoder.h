@@ -109,6 +109,12 @@ void ct_voice_state(const CtEngine *engine, int voice,
 /// current backend does not expose yields a flat line.
 int ct_voice_waveform(const CtEngine *engine, int voice, float *out, int frames);
 
+/// Name of the sample currently playing on a voice (empty when unknown).
+const char *ct_voice_sample(const CtEngine *engine, int voice);
+
+/// Module comment / message text (TEXT, STIL, IT message, game/music credits).
+const char *ct_module_comment(const CtEngine *engine);
+
 /// Tells the decoders where the app's resources live (UADE needs its data files).
 void ct_engine_set_resource_path(const char *path);
 

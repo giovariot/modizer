@@ -22,6 +22,7 @@ struct DecodedTrackInfo: Equatable {
     var currentSubsong: Int
     var duration: TimeInterval
     var isConsole: Bool
+    var comment: String = ""
 }
 
 /// One row of the instrument list.
@@ -29,6 +30,7 @@ struct VoiceSnapshot: Identifiable, Equatable {
     let id: Int
     let name: String
     let instrument: String
+    let sample: String
     let note: Int
     let level: Float
     let active: Bool
@@ -102,7 +104,9 @@ final class ChipAudioEngine {
         var info = CtTrackInfo()
         let ok = url.path.withCString { ct_engine_load(engine, $0, Int32(subsong), &info) }
         guard ok else { return nil }
-        return DecodedTrackInfo(cStruct: info)
+        var decoded = DecodedTrackInfo(cStruct: info)
+        decoded.comment = String(cString: ct_module_comment(engine))
+        return decoded
     }
 
     func unload() {
@@ -114,8 +118,20 @@ final class ChipAudioEngine {
 
     // MARK: transport
 
-    func play() { if let engine { ct_engine_pause(engine, false) } }
+    func play() {
+        av.mainMixerNode.outputVolume = 1
+        if !av.isRunning { try? av.start() }
+        if let engine { ct_engine_pause(engine, false) }
+    }
     func pause() { if let engine { ct_engine_pause(engine, true) } }
+
+    /// Stops making sound right away: mutes the mixer and pauses the hardware so
+    /// the samples already queued in the output buffer are dropped.
+    func hardStop() {
+        av.mainMixerNode.outputVolume = 0
+        av.pause()
+        if let engine { ct_engine_unload(engine) }
+    }
     var isPaused: Bool { engine.map { ct_engine_is_paused($0) } ?? true }
 
     func seek(to time: TimeInterval) { if let engine { ct_engine_seek(engine, max(0, time)) } }
@@ -162,10 +178,13 @@ final class ChipAudioEngine {
             let name = String(cString: ct_voice_name(engine, Int32(index)))
             let instrumentName = String(cString: ct_voice_instrument(engine, Int32(index)))
                 .trimmingCharacters(in: .whitespaces)
+            let sampleName = String(cString: ct_voice_sample(engine, Int32(index)))
+                .trimmingCharacters(in: .whitespaces)
 
             result.append(VoiceSnapshot(id: index,
                                         name: name,
                                         instrument: instrumentName,
+                                        sample: sampleName,
                                         note: Int(note),
                                         level: level,
                                         active: active,

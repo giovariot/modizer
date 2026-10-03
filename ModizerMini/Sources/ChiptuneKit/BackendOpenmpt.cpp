@@ -16,8 +16,10 @@ struct OpenmptBackend : CtDecoder {
     openmpt_module *mod = nullptr;
     int nVoices = 0;
     char nameBuf[64];
+    char commentBuf[4096] = {0};
 
     ~OpenmptBackend() override { if (mod) openmpt_module_destroy(mod); }
+    const char *comment() override { return commentBuf; }
 
     void render(int16_t *dst, int frames) override {
         if (mod) openmpt_module_read_interleaved_stereo(mod, CT_SAMPLE_RATE, (size_t)frames, dst);
@@ -71,6 +73,11 @@ CtDecoder *ct_create_openmpt(const char *path, int subsong, CtTrackInfo *info) {
     OpenmptBackend *b = new OpenmptBackend();
     b->mod = mod;
     b->nVoices = openmpt_module_get_num_channels(mod);
+    {
+        const char *msg = openmpt_module_get_metadata(mod, "message");
+        if (msg && msg[0]) ctCopyStr(b->commentBuf, sizeof(b->commentBuf), msg);
+        if (msg) openmpt_free_string(msg);
+    }
 
     if (info) {
         const char *title = openmpt_module_get_metadata(mod, "title");

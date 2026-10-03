@@ -426,6 +426,18 @@ void ct_voice_state(const CtEngine *engine, int voice, int *note, int *instrumen
     pthread_mutex_unlock((pthread_mutex_t *)&e->lock);
 }
 
+const char *ct_voice_sample(const CtEngine *engine, int voice) {
+    const CtEngine *e = (const CtEngine *)engine;
+    if (!e || !e->backend) return "";
+    return e->backend->voiceSample(voice);
+}
+
+const char *ct_module_comment(const CtEngine *engine) {
+    const CtEngine *e = (const CtEngine *)engine;
+    if (!e || !e->backend) return "";
+    return e->backend->comment();
+}
+
 int ct_voice_waveform(const CtEngine *engine, int voice, float *out, int frames) {
     const CtEngine *e = (const CtEngine *)engine;
     if (!e || !out || frames <= 0 || voice < 0 || voice >= SOUND_MAXVOICES_BUFFER_FX) return 0;

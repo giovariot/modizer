@@ -27,6 +27,8 @@ struct CtDecoder {
     virtual int voiceCount() { return 0; }
     virtual const char *voiceName(int voice) { (void)voice; return ""; }
     virtual const char *voiceInstrument(int voice) { (void)voice; return ""; }
+    virtual const char *voiceSample(int voice) { (void)voice; return ""; }
+    virtual const char *comment() { return ""; }
     virtual void voiceState(int voice, int *note, float *level, bool *active) {
         (void)voice;
         if (note) *note = 0;

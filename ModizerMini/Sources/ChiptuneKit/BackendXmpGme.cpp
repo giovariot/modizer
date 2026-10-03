@@ -53,6 +53,19 @@ struct XmpBackend : CtDecoder {
         if (i < 0 || i >= mi.mod->ins) return "";
         return mi.mod->xxi[i].name;
     }
+    const char *voiceSample(int v) override {
+        struct xmp_module_info mi;
+        xmp_get_module_info(ctx, &mi);
+        if (!mi.mod) return "";
+        int smp = fi.channel_info[v].sample;
+        if (smp < 0 || smp >= mi.mod->smp) return "";
+        return mi.mod->xxs[smp].name;
+    }
+    const char *comment() override {
+        struct xmp_module_info mi;
+        xmp_get_module_info(ctx, &mi);
+        return mi.comment ? mi.comment : "";
+    }
     void voiceState(int v, int *note, float *level, bool *active) override {
         const struct xmp_channel_info *ci = &fi.channel_info[v];
         if (note) *note = (ci->note >= 0x80) ? 0 : ci->note;
@@ -112,8 +125,10 @@ struct GmeBackend : CtDecoder {
     int nVoices = 0;
     int subsong = 0;
     char nameBuf[64];
+    char commentBuf[1024] = {0};
 
     ~GmeBackend() override { if (emu) gme_delete(emu); }
+    const char *comment() override { return commentBuf; }
 
     void render(int16_t *dst, int frames) override {
         if (!emu) return;
@@ -157,6 +172,7 @@ CtDecoder *ct_create_gme(const char *path, int subsong, CtTrackInfo *info) {
     b->emu = emu;
     b->nVoices = gme_voice_count(emu);
     b->subsong = subsong;
+    if (gi && gi->comment && gi->comment[0]) ctCopyStr(b->commentBuf, sizeof(b->commentBuf), gi->comment);
 
     if (info) {
         const char *title = "Unknown track";

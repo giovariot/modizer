@@ -47,8 +47,22 @@ final class PreviewViewController: NSViewController, QLPreviewingController {
 /// every file; loading a new one unloads the previous track.
 @Observable
 final class QuickLookPlayback {
+    /// Every live playback in this process. Quick Look may keep more than one
+    /// preview controller around, so starting a file stops the others.
+    private static let live = NSHashTable<AnyObject>.weakObjects()
+
     private let audio = ChipAudioEngine()
     private var ticker: Timer?
+
+    init() {
+        QuickLookPlayback.live.add(self)
+    }
+
+    private func stopOthers() {
+        for case let other as QuickLookPlayback in QuickLookPlayback.live.allObjects where other !== self {
+            other.stop()
+        }
+    }
 
     private(set) var info: DecodedTrackInfo?
     private(set) var waveform: [Float] = Array(repeating: 0, count: 320)
@@ -59,10 +73,14 @@ final class QuickLookPlayback {
     private(set) var displayName = ""
 
     func load(_ url: URL) {
+        // Stop anything else that may still be playing (other preview
+        // controllers the system kept around).
+        stopOthers()
+
         // Stop the current track before switching to the new file.
         ticker?.invalidate()
         ticker = nil
-        audio.unload()
+        audio.hardStop()
 
         displayName = url.deletingPathExtension().lastPathComponent
         failed = false
@@ -89,7 +107,7 @@ final class QuickLookPlayback {
     func stop() {
         ticker?.invalidate()
         ticker = nil
-        audio.unload()
+        audio.hardStop()
         isPaused = true
     }
 
@@ -125,6 +143,12 @@ private struct QuickLookPreviewView: View {
                             .font(.caption)
                             .foregroundStyle(.secondary)
                             .lineLimit(1)
+                        if !info.comment.isEmpty {
+                            Text(info.comment.replacingOccurrences(of: "\n", with: " "))
+                                .font(.caption2)
+                                .foregroundStyle(.tertiary)
+                                .lineLimit(1)
+                        }
                     }
                 }
 
@@ -170,7 +194,7 @@ private struct CompactVoiceList: View {
                             .font(.caption.monospacedDigit())
                             .foregroundStyle(.secondary)
                             .frame(width: 78, alignment: .leading)
-                        Text(voice.instrument.isEmpty ? Formatting.noteName(voice.note) : voice.instrument)
+                        Text(voice.instrument.isEmpty ? "—" : voice.instrument)
                             .font(.caption)
                             .lineLimit(1)
                         Spacer(minLength: 0)

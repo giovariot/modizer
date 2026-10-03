@@ -52,10 +52,15 @@ private struct TrackInfoHeader: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
-            Text(track?.displayName ?? "—")
-                .font(.largeTitle.weight(.semibold))
-                .lineLimit(1)
-                .truncationMode(.middle)
+            HStack(alignment: .firstTextBaseline, spacing: 10) {
+                Text(track?.displayName ?? "—")
+                    .font(.largeTitle.weight(.semibold))
+                    .lineLimit(1)
+                    .truncationMode(.middle)
+                if let info, !info.comment.isEmpty {
+                    ModuleInfoButton(info: info)
+                }
+            }
 
             if let info {
                 HStack(spacing: 6) {
@@ -101,6 +106,62 @@ private struct StatChip: View {
             .padding(.horizontal, 10)
             .padding(.vertical, 4)
             .background(.quaternary, in: Capsule())
+    }
+}
+
+// MARK: - Module info
+
+private struct ModuleInfoButton: View {
+    let info: DecodedTrackInfo
+    @State private var showing = false
+
+    var body: some View {
+        Button {
+            showing.toggle()
+        } label: {
+            Image(systemName: "info.circle")
+                .font(.title3)
+                .foregroundStyle(.secondary)
+        }
+        .buttonStyle(.plain)
+        .help("Info e commenti del modulo")
+        .popover(isPresented: $showing, arrowEdge: .bottom) {
+            ScrollView {
+                VStack(alignment: .leading, spacing: 10) {
+                    Text(info.title.isEmpty ? "Modulo" : info.title)
+                        .font(.headline)
+                    Grid(alignment: .leading, horizontalSpacing: 14, verticalSpacing: 4) {
+                        DetailRow("Formato", info.format)
+                        DetailRow("Sistema", info.system)
+                        if info.channels > 0 { DetailRow("Canali", "\(info.channels)") }
+                        if info.instruments > 0 { DetailRow("Strumenti", "\(info.instruments)") }
+                        if info.samples > 0 { DetailRow("Campioni", "\(info.samples)") }
+                        if info.subsongs > 1 { DetailRow("Subsong", "\(info.currentSubsong + 1)/\(info.subsongs)") }
+                        if info.duration > 0 { DetailRow("Durata", Formatting.time(info.duration)) }
+                    }
+                    Divider()
+                    Text(info.comment)
+                        .font(.callout)
+                        .textSelection(.enabled)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                }
+                .padding(14)
+            }
+            .frame(width: 380, height: 300)
+        }
+    }
+}
+
+private struct DetailRow: View {
+    let label: String
+    let value: String
+    init(_ label: String, _ value: String) { self.label = label; self.value = value }
+
+    var body: some View {
+        GridRow {
+            Text(label).foregroundStyle(.secondary)
+            Text(value).textSelection(.enabled)
+        }
     }
 }
 
@@ -150,13 +211,19 @@ private struct VoiceRow: View {
 
             VStack(alignment: .leading, spacing: 3) {
                 HStack(spacing: 8) {
-                    Text(voice.instrument.isEmpty ? (voice.active ? Formatting.noteName(voice.note) : "—") : voice.instrument)
+                    Text(voice.instrument.isEmpty ? "—" : voice.instrument)
                         .font(.callout)
                         .lineLimit(1)
                     Spacer(minLength: 0)
                     Text(Formatting.noteName(voice.note))
                         .font(.caption.monospacedDigit())
                         .foregroundStyle(.secondary)
+                }
+                if !voice.sample.isEmpty, voice.sample != voice.instrument {
+                    Text("campione: \(voice.sample)")
+                        .font(.caption2)
+                        .foregroundStyle(.secondary)
+                        .lineLimit(1)
                 }
                 LevelBar(level: voice.level, active: voice.active, accent: settings.accent)
             }
