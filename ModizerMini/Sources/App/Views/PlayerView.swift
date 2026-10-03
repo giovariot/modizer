@@ -208,7 +208,7 @@ private struct VoiceListView: View {
             .padding(.bottom, 6)
 
             ScrollView {
-                LazyVStack(spacing: 6) {
+                LazyVStack(spacing: 2) {
                     ForEach(voices) { voice in
                         VoiceRow(voice: voice)
                     }
@@ -232,39 +232,39 @@ private struct VoiceRow: View {
     }
 
     var body: some View {
-        HStack(spacing: 12) {
-            Text(voice.name)
-                .font(.callout.monospacedDigit())
+        HStack(spacing: 8) {
+            // channel / voice number
+            Text("\(voice.id + 1)")
+                .font(.caption.monospacedDigit())
                 .foregroundStyle(.secondary)
-                .frame(width: 90, alignment: .leading)
+                .frame(width: 22, alignment: .trailing)
 
-            VStack(alignment: .leading, spacing: 3) {
-                HStack(spacing: 8) {
-                    Text(instrumentTitle)
-                        .font(.callout)
-                        .lineLimit(1)
-                    Spacer(minLength: 0)
-                    Text(Formatting.noteName(voice.note))
-                        .font(.caption.monospacedDigit())
-                        .foregroundStyle(.secondary)
-                }
-                if !voice.sample.isEmpty, voice.sample != voice.instrument {
-                    Text("campione: \(voice.sample)")
-                        .font(.caption2)
-                        .foregroundStyle(.secondary)
-                        .lineLimit(1)
-                }
-                LevelBar(level: voice.level, active: voice.active, accent: settings.accent)
-            }
-            .frame(maxWidth: .infinity)
+            // instrument (declared name, or a placeholder)
+            Text(instrumentTitle)
+                .font(.callout)
+                .lineLimit(1)
+                .truncationMode(.middle)
+                .frame(maxWidth: .infinity, alignment: .leading)
 
+            // volume
+            LevelBar(level: voice.level, active: voice.active, accent: settings.accent)
+                .frame(width: 64)
+
+            // note
+            Text(Formatting.noteName(voice.note))
+                .font(.caption.monospacedDigit())
+                .foregroundStyle(.secondary)
+                .frame(width: 34, alignment: .trailing)
+
+            // per-voice oscilloscope
             MiniWaveform(samples: voice.waveform, active: voice.active, accent: settings.accent)
-                .frame(width: 150, height: 30)
+                .frame(width: 120, height: 20)
         }
-        .padding(.vertical, 4)
-        .padding(.horizontal, 10)
+        .padding(.vertical, 1)
+        .padding(.horizontal, 8)
         .background(voice.active ? settings.accent.opacity(0.10) : Color.clear,
-                    in: RoundedRectangle(cornerRadius: 8))
+                    in: RoundedRectangle(cornerRadius: 6))
+        .help(voice.sample.isEmpty ? instrumentTitle : "\(instrumentTitle) — campione: \(voice.sample)")
     }
 }
 

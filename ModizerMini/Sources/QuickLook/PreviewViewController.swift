@@ -79,14 +79,33 @@ final class PreviewViewController: NSViewController, QLPreviewingController {
     }
 
     /// Quick Look does not always tell the controller when another preview takes
-    /// over (e.g. moving to an MP3), so poll whether we are still on screen.
+    /// over (e.g. moving to an MP3, which the system previews itself), so poll
+    /// whether our view is still the one on screen. A few consecutive failures
+    /// are required to avoid stopping during a normal transition.
     private func startWatchdog() {
         guard watchdog == nil else { return }
+        var missed = 0
         watchdog = Timer.scheduledTimer(withTimeInterval: 0.25, repeats: true) { [weak self] _ in
             guard let self else { return }
-            let onScreen = self.view.window != nil && !self.view.isHidden && self.view.superview != nil
-            if !onScreen { self.stopEverything() }
+            if self.isPreviewVisible() {
+                missed = 0
+            } else {
+                missed += 1
+                if missed >= 2 { self.stopEverything() }
+            }
         }
+    }
+
+    /// True when our view is attached to a visible window and actually on top
+    /// (hit-testing catches the case where another preview covers it).
+    private func isPreviewVisible() -> Bool {
+        guard let window = view.window, window.isVisible, !view.isHidden, view.superview != nil else {
+            return false
+        }
+        guard let content = window.contentView else { return false }
+        let point = view.convert(NSPoint(x: view.bounds.midX, y: view.bounds.midY), to: nil)
+        guard let hit = content.hitTest(point) else { return false }
+        return hit === view || hit.isDescendant(of: view) || view.isDescendant(of: hit)
     }
 }
 
